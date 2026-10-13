@@ -2,5 +2,7 @@
   "name": "Vintage Crafts & Brass Atelier",
   "description": "Curated handcrafted brass artifacts, nautical instruments, vintage horology, and direct WhatsApp ordering with admin management.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
