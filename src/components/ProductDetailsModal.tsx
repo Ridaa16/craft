@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, MessageCircle, ShoppingBag, ShieldCheck, CheckCircle2, Ruler, Weight, Sparkles, Truck } from 'lucide-react';
+import { X, MessageCircle, ShoppingBag, ShieldCheck, CheckCircle2, Ruler, Weight, Sparkles, Truck, Heart } from 'lucide-react';
 import { Product, SiteConfig } from '../types';
 import { buildProductInquiryLink } from '../utils/whatsapp';
 import { ProductVisual } from './ProductSvgAsset';
@@ -11,6 +11,8 @@ interface ProductDetailsModalProps {
   onClose: () => void;
   onAddToInquiry: (product: Product, quantity?: number) => void;
   isInInquiryList: boolean;
+  onToggleWishlist: (product: Product) => void;
+  isWishlisted: boolean;
 }
 
 export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
@@ -20,6 +22,8 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   onClose,
   onAddToInquiry,
   isInInquiryList,
+  onToggleWishlist,
+  isWishlisted,
 }) => {
   const [quantity, setQuantity] = React.useState(1);
   const [includeEngraving, setIncludeEngraving] = React.useState(false);
@@ -57,14 +61,29 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-[#1C1B1A]/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
       <div className="relative w-full max-w-4xl bg-[#FDFBF7] rounded-2xl border border-[#D9CEB7] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        {/* Header Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-[#FFFFFF]/80 hover:bg-[#FFFFFF] text-[#1C1B1A] border border-[#E3DAC6] transition-colors shadow-xs"
-          aria-label="Close modal"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Header Action buttons */}
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          <button
+            onClick={() => onToggleWishlist(product)}
+            className={`p-2 rounded-full border transition-colors shadow-xs ${
+              isWishlisted
+                ? 'bg-white text-rose-600 border-rose-200'
+                : 'bg-white/80 hover:bg-white text-[#736E67] hover:text-rose-600 border-[#E3DAC6]'
+            }`}
+            title={isWishlisted ? 'Saved to Wishlist' : 'Add to Wishlist'}
+            aria-label={isWishlisted ? 'Saved to Wishlist' : 'Add to Wishlist'}
+          >
+            <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600 text-rose-600' : 'fill-transparent'}`} />
+          </button>
+
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full bg-[#FFFFFF]/80 hover:bg-[#FFFFFF] text-[#1C1B1A] border border-[#E3DAC6] transition-colors shadow-xs"
+            aria-label="Close modal"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2">
           {/* Left Column: Visual Showcase */}

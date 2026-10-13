@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Copy,
   RotateCcw,
+  LogOut,
 } from 'lucide-react';
 import { Product, SiteConfig, LeadSubmission, StockStatus } from '../types';
 import { INITIAL_PRODUCTS } from '../data/defaultProducts';
@@ -33,6 +34,7 @@ interface AdminModalProps {
   onUpdateConfig: (newConfig: SiteConfig) => void;
   leads: LeadSubmission[];
   onUpdateLeadStatus: (leadId: string, status: LeadSubmission['status']) => void;
+  onSignOut: () => void;
 }
 
 type AdminTab = 'articles' | 'leads' | 'whatsapp' | 'hero' | 'settings';
@@ -49,6 +51,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   onUpdateConfig,
   leads,
   onUpdateLeadStatus,
+  onSignOut,
 }) => {
   const [activeTab, setActiveTab] = React.useState<AdminTab>('articles');
 
@@ -205,8 +208,20 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               </span>
             )}
             <button
+              onClick={() => {
+                onSignOut();
+                onClose();
+              }}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[#DFBF7B] hover:text-white hover:bg-[#33302D] border border-[#44403C] flex items-center gap-1.5 transition-colors"
+              title="Lock Admin Session and Sign Out"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Lock / Sign Out</span>
+            </button>
+            <button
               onClick={onClose}
               className="p-1.5 rounded-lg text-[#A8A196] hover:text-white hover:bg-[#2C2927]"
+              title="Close Panel"
             >
               <X className="w-5 h-5" />
             </button>
@@ -893,6 +908,22 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     placeholder="https://script.google.com/macros/s/AKfycb.../exec"
                     className="w-full p-2.5 rounded-lg border border-[#D9CEB7] bg-white font-mono text-xs"
                   />
+                </div>
+
+                <div className="text-xs pt-2 border-t border-[#EAE3D2]">
+                  <label className="block font-bold text-[#1C1B1A] mb-1">
+                    Administrator Login Passkey / Password
+                  </label>
+                  <input
+                    type="text"
+                    value={localConfig.adminPasskey || 'atelier1879'}
+                    onChange={(e) => setLocalConfig({ ...localConfig, adminPasskey: e.target.value })}
+                    placeholder="e.g. atelier1879"
+                    className="w-full p-2.5 rounded-lg border border-[#D9CEB7] bg-white font-mono text-xs font-bold"
+                  />
+                  <p className="mt-1 text-[11px] text-[#8F897F]">
+                    Controls access to this control panel. Default passkey: <code>atelier1879</code>
+                  </p>
                 </div>
 
                 {/* Code snippet display */}

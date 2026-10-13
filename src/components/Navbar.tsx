@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, ShoppingBag, Sliders, Menu, X, Phone } from 'lucide-react';
+import { MessageCircle, ShoppingBag, Sliders, Menu, X, Phone, Heart } from 'lucide-react';
 import { SiteConfig, InquiryItem } from '../types';
 import { buildGeneralWhatsAppLink } from '../utils/whatsapp';
 
@@ -7,6 +7,8 @@ interface NavbarProps {
   config: SiteConfig;
   inquiryItems: InquiryItem[];
   onOpenInquiryDrawer: () => void;
+  wishlistCount: number;
+  onOpenWishlistDrawer: () => void;
   onOpenAdminModal: () => void;
   activeSection: string;
   onNavigate: (section: string) => void;
@@ -16,6 +18,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   config,
   inquiryItems,
   onOpenInquiryDrawer,
+  wishlistCount,
+  onOpenWishlistDrawer,
   onOpenAdminModal,
   activeSection,
   onNavigate,
@@ -88,27 +92,43 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* Zone 3: Actions Cluster */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+          {/* Saved Favorites & Wishlist Trigger */}
+          <button
+            onClick={onOpenWishlistDrawer}
+            className="relative p-2.5 rounded-lg border border-[#E3DAC6] bg-[#F8F4EB] text-[#1C1B1A] hover:bg-[#EFE7D8] transition-colors flex items-center gap-1.5 text-xs font-semibold"
+            title="Saved Favorites & Wishlist"
+            aria-label="View Wishlist"
+          >
+            <Heart className={`w-4 h-4 ${wishlistCount > 0 ? 'fill-rose-600 text-rose-600' : 'text-[#736E67]'}`} />
+            <span className="hidden md:inline">Favorites</span>
+            {wishlistCount > 0 && (
+              <span className="bg-rose-600 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full min-w-4 text-center leading-tight">
+                {wishlistCount}
+              </span>
+            )}
+          </button>
+
           {/* Quick Inquiry Bag (Flipkart Style) */}
           <button
             onClick={onOpenInquiryDrawer}
-            className="relative p-2.5 rounded-lg border border-[#E3DAC6] bg-[#F8F4EB] text-[#1C1B1A] hover:bg-[#EFE7D8] transition-colors flex items-center gap-2 text-xs font-semibold"
+            className="relative p-2.5 rounded-lg border border-[#E3DAC6] bg-[#F8F4EB] text-[#1C1B1A] hover:bg-[#EFE7D8] transition-colors flex items-center gap-1.5 text-xs font-semibold"
             title="View Quote & Inquiry List"
           >
             <ShoppingBag className="w-4 h-4 text-[#9A7730]" />
             <span className="hidden sm:inline">Inquiry List</span>
             {totalItemCount > 0 && (
-              <span className="bg-[#9A7730] text-white text-[11px] font-bold px-1.5 py-0.2 rounded-full min-w-4 text-center">
+              <span className="bg-[#9A7730] text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full min-w-4 text-center leading-tight">
                 {totalItemCount}
               </span>
             )}
           </button>
 
-          {/* Admin CMS Trigger */}
+          {/* Admin CMS Trigger (Protected by Authentication) */}
           <button
             onClick={onOpenAdminModal}
             className="p-2.5 rounded-lg border border-[#E3DAC6] bg-[#F8F4EB] text-[#4A4744] hover:text-[#1C1B1A] hover:bg-[#EFE7D8] transition-colors"
-            title="Atelier Admin Control Panel"
+            title="Atelier Admin Control Panel (Protected)"
           >
             <Sliders className="w-4 h-4" />
           </button>
@@ -155,6 +175,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {link.label}
               </button>
             ))}
+
+            <button
+              onClick={() => {
+                onOpenWishlistDrawer();
+                setMobileMenuOpen(false);
+              }}
+              className="text-left px-3 py-2 text-sm rounded-md text-[#1C1B1A] hover:bg-[#F2ECE0] flex items-center justify-between"
+            >
+              <div className="flex items-center gap-2">
+                <Heart className={`w-4 h-4 ${wishlistCount > 0 ? 'fill-rose-600 text-rose-600' : 'text-[#736E67]'}`} />
+                <span>Saved Favorites & Wishlist</span>
+              </div>
+              {wishlistCount > 0 && (
+                <span className="bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  {wishlistCount}
+                </span>
+              )}
+            </button>
           </div>
 
           <div className="pt-2 border-t border-[#E3DAC6] flex flex-col gap-2">

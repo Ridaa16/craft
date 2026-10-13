@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, Plus, Check, Star, Eye } from 'lucide-react';
+import { MessageCircle, Plus, Check, Star, Eye, Heart } from 'lucide-react';
 import { Product, SiteConfig } from '../types';
 import { buildProductInquiryLink } from '../utils/whatsapp';
 import { ProductVisual } from './ProductSvgAsset';
@@ -10,6 +10,8 @@ interface ProductCardProps {
   onOpenDetails: (product: Product) => void;
   onToggleInquiryItem: (product: Product) => void;
   isInInquiryList: boolean;
+  onToggleWishlist: (product: Product) => void;
+  isWishlisted: boolean;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -18,6 +20,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onOpenDetails,
   onToggleInquiryItem,
   isInInquiryList,
+  onToggleWishlist,
+  isWishlisted,
 }) => {
   const discountPercent = Math.round(((product.mrp - product.price) / product.mrp) * 100);
 
@@ -65,13 +69,35 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Flipkart-style discount pill */}
         {discountPercent > 0 && (
-          <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded text-[11px] font-bold tracking-tight bg-[#9A7730] text-white shadow-xs">
+          <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded text-[11px] font-bold tracking-tight bg-[#9A7730] text-white shadow-xs z-10">
             {discountPercent}% OFF
           </div>
         )}
 
+        {/* Wishlist Heart Icon Button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleWishlist(product);
+          }}
+          className={`absolute top-2.5 right-2.5 z-20 p-2 rounded-full backdrop-blur-md transition-all duration-200 border shadow-xs ${
+            isWishlisted
+              ? 'bg-[#FFFFFF] text-rose-600 border-rose-200 scale-105'
+              : 'bg-[#FFFFFF]/85 text-[#736E67] hover:text-rose-600 border-[#E0D7C4] hover:bg-[#FFFFFF]'
+          }`}
+          title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+          aria-label={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+        >
+          <Heart
+            className={`w-4 h-4 transition-transform duration-200 ${
+              isWishlisted ? 'fill-rose-600 text-rose-600 scale-110' : 'fill-transparent'
+            }`}
+          />
+        </button>
+
         {/* SKU tag */}
-        <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded text-[10px] font-mono tracking-wider bg-[#FDFBF7]/90 text-[#4A4744] border border-[#E0D7C4]">
+        <div className="absolute bottom-2 left-2.5 px-2 py-0.5 rounded text-[10px] font-mono tracking-wider bg-[#FDFBF7]/90 text-[#4A4744] border border-[#E0D7C4] z-10">
           {product.sku}
         </div>
       </div>

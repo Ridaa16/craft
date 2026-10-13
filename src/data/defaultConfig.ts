@@ -12,7 +12,8 @@ export const INITIAL_SITE_CONFIG: SiteConfig = {
   email: 'inquiry@vintagecrafts.net.in',
   address: 'Heritage Metal Foundry & Craft Hub, Moradabad - 244001, Uttar Pradesh, India',
   googleSheetsWebhookUrl: 'https://script.google.com/macros/s/AKfycbz_SAMPLE_WEBHOOK_URL/exec',
-  whatsappMessageTemplate: 'Hello Vintage Crafts, I am inquiring about {product_name} (SKU: {sku}, Price: {price}). Please confirm stock and delivery timeframe.'
+  whatsappMessageTemplate: 'Hello Vintage Crafts, I am inquiring about {product_name} (SKU: {sku}, Price: {price}). Please confirm stock and delivery timeframe.',
+  adminPasskey: 'atelier1879'
 };
 
 export const INITIAL_LEADS: LeadSubmission[] = [

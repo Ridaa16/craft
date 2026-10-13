@@ -14,6 +14,7 @@ import {
   MessageCircle,
   ExternalLink,
   ShieldCheck,
+  Heart,
 } from 'lucide-react';
 import { Product, SiteConfig, LeadSubmission, InquiryItem } from './types';
 import { INITIAL_PRODUCTS } from './data/defaultProducts';
@@ -23,9 +24,11 @@ import { Hero } from './components/Hero';
 import { ProductCard } from './components/ProductCard';
 import { ProductDetailsModal } from './components/ProductDetailsModal';
 import { InquiryDrawer } from './components/InquiryDrawer';
+import { WishlistDrawer } from './components/WishlistDrawer';
 import { ContactSection } from './components/ContactSection';
 import { CraftStorySection } from './components/CraftStorySection';
 import { AdminModal } from './components/AdminModal';
+import { AdminAuthModal } from './components/AdminAuthModal';
 import { WhatsAppFloatingButton } from './components/WhatsAppFloatingButton';
 import { buildGeneralWhatsAppLink } from './utils/whatsapp';
 
@@ -89,13 +92,32 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = React.useState('All Artifacts');
   const [sortBy, setSortBy] = React.useState<'featured' | 'price_asc' | 'price_desc' | 'rating'>('featured');
   const [stockFilter, setStockFilter] = React.useState<'all' | 'in_stock' | 'made_to_order'>('all');
+  const [filterOnlyFavorites, setFilterOnlyFavorites] = React.useState(false);
 
   const [selectedProductForModal, setSelectedProductForModal] = React.useState<Product | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = React.useState(false);
   const [isInquiryDrawerOpen, setIsInquiryDrawerOpen] = React.useState(false);
+  const [isWishlistDrawerOpen, setIsWishlistDrawerOpen] = React.useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = React.useState(false);
+  const [isAdminAuthModalOpen, setIsAdminAuthModalOpen] = React.useState(false);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState<boolean>(() => {
+    try {
+      return (
+        localStorage.getItem('vc_admin_authenticated') === 'true' ||
+        sessionStorage.getItem('vc_admin_authenticated') === 'true'
+      );
+    } catch {
+      return false;
+    }
+  });
+
   const [activeNavSection, setActiveNavSection] = React.useState('collection');
   const [contactPreselectedProduct, setContactPreselectedProduct] = React.useState<Product | null>(null);
+
+  // Wishlist computed array
+  const wishlistProducts = React.useMemo(() => {
+    return products.filter((p) => Boolean(p.isWishlisted));
+  }, [products]);
 
   // Categories list
   const categories = React.useMemo(() => {
@@ -107,6 +129,10 @@ export default function App() {
   const filteredProducts = React.useMemo(() => {
     return products
       .filter((p) => {
+        // Saved favorites filter
+        if (filterOnlyFavorites && !p.isWishlisted) {
+          return false;
+        }
         // Category
         if (selectedCategory !== 'All Artifacts' && p.category !== selectedCategory) {
           return false;
@@ -138,7 +164,7 @@ export default function App() {
         // Featured
         return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
       });
-  }, [products, selectedCategory, stockFilter, searchQuery, sortBy]);
+  }, [products, selectedCategory, stockFilter, filterOnlyFavorites, searchQuery, sortBy]);
 
   // Handlers
   const handleOpenDetails = (product: Product) => {
@@ -181,6 +207,47 @@ export default function App() {
 
   const handleClearInquiry = () => {
     setInquiryItems([]);
+  };
+
+  // Wishlist handlers
+  const handleToggleWishlist = (product: Product) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === product.id ? { ...p, isWishlisted: !p.isWishlisted } : p))
+    );
+  };
+
+  const handleClearWishlist = () => {
+    setProducts((prev) => prev.map((p) => ({ ...p, isWishlisted: false })));
+  };
+
+  const handleMoveAllWishlistToInquiryCart = () => {
+    wishlistProducts.forEach((prod) => handleAddToInquiry(prod, 1));
+    setIsWishlistDrawerOpen(false);
+    setIsInquiryDrawerOpen(true);
+  };
+
+  // Admin Authentication handlers
+  const handleOpenAdmin = () => {
+    if (isAdminAuthenticated) {
+      setIsAdminModalOpen(true);
+    } else {
+      setIsAdminAuthModalOpen(true);
+    }
+  };
+
+  const handleAdminAuthenticated = () => {
+    setIsAdminAuthenticated(true);
+    setIsAdminModalOpen(true);
+  };
+
+  const handleAdminSignOut = () => {
+    setIsAdminAuthenticated(false);
+    try {
+      localStorage.removeItem('vc_admin_authenticated');
+      sessionStorage.removeItem('vc_admin_authenticated');
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleNavigate = (section: string) => {
@@ -227,7 +294,9 @@ export default function App() {
         config={config}
         inquiryItems={inquiryItems}
         onOpenInquiryDrawer={() => setIsInquiryDrawerOpen(true)}
-        onOpenAdminModal={() => setIsAdminModalOpen(true)}
+        wishlistCount={wishlistProducts.length}
+        onOpenWishlistDrawer={() => setIsWishlistDrawerOpen(true)}
+        onOpenAdminModal={handleOpenAdmin}
         activeSection={activeNavSection}
         onNavigate={handleNavigate}
       />
@@ -250,7 +319,7 @@ export default function App() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#EAE3D2]">
           <div className="flex items-baseline gap-2">
             <h2 className="font-serif text-2xl font-bold text-[#1C1B1A]">
-              {selectedCategory}
+              {filterOnlyFavorites ? 'Saved Favorites & Wishlist' : selectedCategory}
             </h2>
             <span className="text-xs text-[#716C64] font-mono">
               ({filteredProducts.length} pieces available)
@@ -258,12 +327,28 @@ export default function App() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {/* Quick Saved Favorites Filter Button */}
+            <button
+              onClick={() => setFilterOnlyFavorites(!filterOnlyFavorites)}
+              className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                filterOnlyFavorites
+                  ? 'bg-rose-50 text-rose-700 border-rose-300 shadow-2xs'
+                  : 'bg-[#F9F5EC] text-[#55504A] border-[#DFD5C2] hover:bg-[#F0E8D7] hover:text-[#1C1B1A]'
+              }`}
+            >
+              <Heart className={`w-3.5 h-3.5 ${filterOnlyFavorites ? 'fill-rose-600 text-rose-600' : 'text-[#8F897F]'}`} />
+              <span>Favorites ({wishlistProducts.length})</span>
+            </button>
+
             {/* Stock status filter */}
             <div className="flex items-center gap-1 p-1 bg-[#F5EFE3] rounded-lg border border-[#E3DAC6] text-xs">
               <button
-                onClick={() => setStockFilter('all')}
+                onClick={() => {
+                  setStockFilter('all');
+                  setFilterOnlyFavorites(false);
+                }}
                 className={`px-2.5 py-1 rounded-md transition-colors ${
-                  stockFilter === 'all'
+                  stockFilter === 'all' && !filterOnlyFavorites
                     ? 'bg-white text-[#1C1B1A] font-bold shadow-2xs'
                     : 'text-[#615C55] hover:text-[#1C1B1A]'
                 }`}
@@ -271,9 +356,12 @@ export default function App() {
                 All
               </button>
               <button
-                onClick={() => setStockFilter('in_stock')}
+                onClick={() => {
+                  setStockFilter('in_stock');
+                  setFilterOnlyFavorites(false);
+                }}
                 className={`px-2.5 py-1 rounded-md transition-colors ${
-                  stockFilter === 'in_stock'
+                  stockFilter === 'in_stock' && !filterOnlyFavorites
                     ? 'bg-white text-[#1C1B1A] font-bold shadow-2xs'
                     : 'text-[#615C55] hover:text-[#1C1B1A]'
                 }`}
@@ -281,9 +369,12 @@ export default function App() {
                 Ready to Ship
               </button>
               <button
-                onClick={() => setStockFilter('made_to_order')}
+                onClick={() => {
+                  setStockFilter('made_to_order');
+                  setFilterOnlyFavorites(false);
+                }}
                 className={`px-2.5 py-1 rounded-md transition-colors ${
-                  stockFilter === 'made_to_order'
+                  stockFilter === 'made_to_order' && !filterOnlyFavorites
                     ? 'bg-white text-[#1C1B1A] font-bold shadow-2xs'
                     : 'text-[#615C55] hover:text-[#1C1B1A]'
                 }`}
@@ -314,16 +405,21 @@ export default function App() {
         {filteredProducts.length === 0 ? (
           <div className="py-20 text-center text-[#736E67]">
             <p className="font-serif text-lg font-bold text-[#1C1B1A]">
-              No Brass Artifacts Match Your Filter
+              {filterOnlyFavorites
+                ? 'You have not added any items to your Wishlist yet.'
+                : 'No Brass Artifacts Match Your Filter'}
             </p>
             <p className="text-xs text-[#8F897F] mt-1">
-              Try adjusting your search query or reset filters.
+              {filterOnlyFavorites
+                ? 'Click the heart icon on any brass piece to save it to your curated collection.'
+                : 'Try adjusting your search query or reset filters.'}
             </p>
             <button
               onClick={() => {
                 setSearchQuery('');
                 setSelectedCategory('All Artifacts');
                 setStockFilter('all');
+                setFilterOnlyFavorites(false);
               }}
               className="mt-4 px-4 py-2 rounded-lg bg-[#1C1B1A] text-white text-xs font-semibold"
             >
@@ -342,6 +438,8 @@ export default function App() {
                   onOpenDetails={handleOpenDetails}
                   onToggleInquiryItem={handleToggleInquiryItem}
                   isInInquiryList={isInInquiryList}
+                  onToggleWishlist={handleToggleWishlist}
+                  isWishlisted={Boolean(product.isWishlisted)}
                 />
               );
             })}
@@ -460,11 +558,11 @@ export default function App() {
               </p>
               <div className="mt-4">
                 <button
-                  onClick={() => setIsAdminModalOpen(true)}
+                  onClick={handleOpenAdmin}
                   className="inline-flex items-center gap-1.5 text-xs text-[#DFBF7B] hover:text-white underline underline-offset-2"
                 >
                   <SlidersHorizontal className="w-3 h-3" />
-                  <span>Open Atelier Admin Panel</span>
+                  <span>Open Atelier Admin Panel (Protected)</span>
                 </button>
               </div>
             </div>
@@ -497,6 +595,19 @@ export default function App() {
             ? inquiryItems.some((i) => i.product.id === selectedProductForModal.id)
             : false
         }
+        onToggleWishlist={handleToggleWishlist}
+        isWishlisted={Boolean(selectedProductForModal?.isWishlisted)}
+      />
+
+      <WishlistDrawer
+        isOpen={isWishlistDrawerOpen}
+        onClose={() => setIsWishlistDrawerOpen(false)}
+        wishlistProducts={wishlistProducts}
+        onToggleWishlist={handleToggleWishlist}
+        onClearWishlist={handleClearWishlist}
+        onMoveToInquiryCart={(prod) => handleAddToInquiry(prod, 1)}
+        onMoveAllToInquiryCart={handleMoveAllWishlistToInquiryCart}
+        config={config}
       />
 
       <InquiryDrawer
@@ -524,6 +635,14 @@ export default function App() {
         onUpdateLeadStatus={(id, status) =>
           setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)))
         }
+        onSignOut={handleAdminSignOut}
+      />
+
+      <AdminAuthModal
+        isOpen={isAdminAuthModalOpen}
+        onClose={() => setIsAdminAuthModalOpen(false)}
+        config={config}
+        onAuthenticated={handleAdminAuthenticated}
       />
 
       {/* 8. WhatsApp Floating Widget */}

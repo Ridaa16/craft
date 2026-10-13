@@ -21,6 +21,7 @@ export interface Product {
   imageUrl?: string;
   svgPreset: 'telescope' | 'compass' | 'clock' | 'astrolabe' | 'helmet' | 'sextant' | 'hourglass' | 'bell';
   highlights: string[];
+  isWishlisted?: boolean;
 }
 
 export interface LeadSubmission {
@@ -56,4 +57,5 @@ export interface SiteConfig {
   address: string;
   googleSheetsWebhookUrl: string;
   whatsappMessageTemplate: string;
+  adminPasskey?: string;
 }
